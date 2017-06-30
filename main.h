@@ -66,7 +66,7 @@ typedef struct _DEVICE_NUMBER
     ULONG  PartitionNumber;
 } DEVICE_NUMBER, *PDEVICE_NUMBER;
 
-typedef enum _STORAGE_PROPERTY_ID { 
+/*typedef enum _STORAGE_PROPERTY_ID { 
   StorageDeviceProperty                  = 0,
   StorageAdapterProperty                 = 1,
   StorageDeviceIdProperty                = 2,
@@ -82,9 +82,9 @@ typedef enum _STORAGE_PROPERTY_ID {
   StorageDevicePowerProperty             = 12, // 0xC
   StorageDeviceCopyOffloadProperty       = 13, // 0xD
   StorageDeviceResiliencyProperty        = 14 // 0xE
-} STORAGE_PROPERTY_ID, *PSTORAGE_PROPERTY_ID;
+} STORAGE_PROPERTY_ID, *PSTORAGE_PROPERTY_ID;*/
 
-typedef struct _STORAGE_DEVICE_DESCRIPTOR {
+/*typedef struct _STORAGE_DEVICE_DESCRIPTOR {
   DWORD            Version;
   DWORD            Size;
   BYTE             DeviceType;
@@ -98,19 +98,19 @@ typedef struct _STORAGE_DEVICE_DESCRIPTOR {
   STORAGE_BUS_TYPE BusType;
   DWORD            RawPropertiesLength;
   BYTE             RawDeviceProperties[1];
-} STORAGE_DEVICE_DESCRIPTOR, *PSTORAGE_DEVICE_DESCRIPTOR;
+} STORAGE_DEVICE_DESCRIPTOR, *PSTORAGE_DEVICE_DESCRIPTOR;*/
 
-typedef enum _STORAGE_QUERY_TYPE { 
+/*typedef enum _STORAGE_QUERY_TYPE { 
   PropertyStandardQuery    = 0,
   PropertyExistsQuery,
   PropertyMaskQuery,
   PropertyQueryMaxDefined
-} STORAGE_QUERY_TYPE, *PSTORAGE_QUERY_TYPE;
+} STORAGE_QUERY_TYPE, *PSTORAGE_QUERY_TYPE;*/
 
-typedef struct _STORAGE_PROPERTY_QUERY {
+/*typedef struct _STORAGE_PROPERTY_QUERY {
   STORAGE_PROPERTY_ID PropertyId;
   STORAGE_QUERY_TYPE  QueryType;
   BYTE                AdditionalParameters[1];
-} STORAGE_PROPERTY_QUERY, *PSTORAGE_PROPERTY_QUERY;
+} STORAGE_PROPERTY_QUERY, *PSTORAGE_PROPERTY_QUERY;*/
 
 #endif

@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
     {
         if(INVALID_FILE_ATTRIBUTES == GetFileAttributes(imagefile) && GetLastError()==ERROR_FILE_NOT_FOUND)
         {
+            printf(".img not found");
             return 2; // .img not found
         }
         else
@@ -67,6 +68,7 @@ int main(int argc, char *argv[])
             int deviceID = getDriveNumberFromLetter(ltr);
             if( deviceID == -1 )
             {
+                printf("device not found");
                 return 3; // device not found
             }
 
@@ -74,6 +76,7 @@ int main(int argc, char *argv[])
             if (hVolume == INVALID_HANDLE_VALUE)
             {
                 status = STATUS_IDLE;
+                printf("invalid handle value for volume");
                 return 4; // invalid handle value for volume
             }
             if (!getLockOnVolume(hVolume))
@@ -81,6 +84,7 @@ int main(int argc, char *argv[])
                 CloseHandle(hVolume);
                 status = STATUS_IDLE;
                 hVolume = INVALID_HANDLE_VALUE;
+                printf("can't get lock on volume");
                 return 5; // can't get lock on volume
             }
             if (!unmountVolume(hVolume))
@@ -89,6 +93,7 @@ int main(int argc, char *argv[])
                 CloseHandle(hVolume);
                 status = STATUS_IDLE;
                 hVolume = INVALID_HANDLE_VALUE;
+                printf("can't unmount volume");
                 return 6; // can't unmount volume
             }
             hFile = getHandleOnFile(imagefile, GENERIC_READ);
@@ -98,6 +103,7 @@ int main(int argc, char *argv[])
                 CloseHandle(hVolume);
                 status = STATUS_IDLE;
                 hVolume = INVALID_HANDLE_VALUE;
+                printf("invalid handle value for file");
                 return 7; // invalid handle value for file
             }
             hRawDisk = getHandleOnDevice(deviceID, GENERIC_WRITE);
@@ -109,24 +115,26 @@ int main(int argc, char *argv[])
                 status = STATUS_IDLE;
                 hVolume = INVALID_HANDLE_VALUE;
                 hFile = INVALID_HANDLE_VALUE;
+                printf("invalid handle value for disk");
                 return 8; // invalid handle value for disk
             }
             availablesectors = getNumberOfSectors(hRawDisk, &sectorsize);
             numsectors = getFileSizeInSectors(hFile, sectorsize);
             if (numsectors > availablesectors)
             {
+                printf("not enough space on volume");
                 return 9; // not enough space on volume
             }
 
             char total_string[32];
-            sprintf(total_string, "%d", numsectors);
+            sprintf(total_string, "%u", numsectors);
 
             for (i = 0ul; i < numsectors && status == STATUS_WRITING; i += 1024ul)
             {
                 if( i % 100 == 0 )
                 {
                     char i_string[32];
-                    sprintf(i_string, "%d", i);
+                    sprintf(i_string, "%u", i);
                     printf(i_string);
                     printf("/");
                     printf(total_string);
@@ -158,6 +166,7 @@ int main(int argc, char *argv[])
                     hRawDisk = INVALID_HANDLE_VALUE;
                     hFile = INVALID_HANDLE_VALUE;
                     hVolume = INVALID_HANDLE_VALUE;
+                    printf("error whilst writing");
                     return 11; // error whilst writing
                 }
                 delete[] sectorData;
@@ -171,13 +180,16 @@ int main(int argc, char *argv[])
             hFile = INVALID_HANDLE_VALUE;
             hVolume = INVALID_HANDLE_VALUE;
         }
+        printf("success");
         return 0; // success
     }
     else
     {
+        printf("not enough arguments");
         return 1; // not enough arguments
     }
     status = STATUS_IDLE;
+    printf("error whilst writing");
     return 11; // error whilst writing
 }
 
@@ -216,7 +228,7 @@ HANDLE getHandleOnFile(const char *filelocation, DWORD access)
     hFile = CreateFileA(filelocation, access, (access == GENERIC_READ) ? FILE_SHARE_READ : 0, NULL, (access == GENERIC_READ) ? OPEN_EXISTING:CREATE_ALWAYS, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        //printf("error - not able to get handle on image file");
+        printf("error - not able to get handle on image file");
     }
     return hFile;
 }
@@ -230,7 +242,7 @@ HANDLE getHandleOnDevice(int device, DWORD access)
     hDevice = CreateFile(devicename, access, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
     {
-        //printf("error - not able to get handle on device");
+        printf("error - not able to get handle on device");
     }
     return hDevice;
 }
@@ -244,7 +256,7 @@ HANDLE getHandleOnVolume(int volume, DWORD access)
     hVolume = CreateFile(volumename, access, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (hVolume == INVALID_HANDLE_VALUE)
     {
-        //printf("error - not able to get handle on volume");
+        printf("error - not able to get handle on volume");
     }
     return hVolume;
 }
@@ -256,7 +268,7 @@ bool getLockOnVolume(HANDLE handle)
     bResult = DeviceIoControl(handle, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &bytesreturned, NULL);
     if (!bResult)
     {
-        //printf("error - not able to lock volume");
+        printf("error - not able to lock volume");
     }
     return (bResult);
 }
@@ -268,7 +280,7 @@ bool removeLockOnVolume(HANDLE handle)
     bResult = DeviceIoControl(handle, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, &junk, NULL);
     if (!bResult)
     {
-        //printf("error - not able to unlock volume");
+        printf("error - not able to unlock volume");
     }
     return (bResult);
 }
@@ -280,7 +292,7 @@ bool unmountVolume(HANDLE handle)
     bResult = DeviceIoControl(handle, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &junk, NULL);
     if (!bResult)
     {
-        //printf("error - not able to dismount volume");
+        printf("error - not able to dismount volume");
     }
     return (bResult);
 }
@@ -294,7 +306,7 @@ char *readSectorDataFromHandle(HANDLE handle, unsigned long long startsector, un
     SetFilePointer(handle, li.LowPart, &li.HighPart, FILE_BEGIN);
     if (!ReadFile(handle, data, sectorsize * numsectors, &bytesread, NULL))
     {
-        //printf("error - not able to read data from handle");
+        printf("error - not able to read data from handle");
         delete[] data;
         data = NULL;
     }
@@ -315,7 +327,7 @@ bool writeSectorDataToHandle(HANDLE handle, char *data, unsigned long long start
     bResult = WriteFile(handle, data, sectorsize * numsectors, &byteswritten, NULL);
     if (!bResult)
     {
-        //printf("error - not able to write data from handle");
+        printf("error - not able to write data from handle");
     }
     return (bResult);
 }
@@ -343,7 +355,7 @@ unsigned long long getFileSizeInSectors(HANDLE handle, unsigned long long sector
     LARGE_INTEGER filesize;
     if(GetFileSizeEx(handle, &filesize) == 0)
     {
-        //printf("error - not able to get image file size");
+        printf("error - not able to get image file size");
         retVal = 0;
     }
     else
@@ -378,8 +390,8 @@ BOOL GetDisksProperty(HANDLE hDevice, PSTORAGE_DEVICE_DESCRIPTOR pDevDesc,
         if (!bResult)
         {
             retVal = false;
-            //printf("error - not able to get device number, is something accessing the device?");
-			//setbuf(stdout, NULL);
+            printf("error - not able to get device number, is something accessing the device?");
+            //setbuf(stdout, NULL);
         }
     }
     else
@@ -387,8 +399,8 @@ BOOL GetDisksProperty(HANDLE hDevice, PSTORAGE_DEVICE_DESCRIPTOR pDevDesc,
         if (DeviceIoControl(hDevice, IOCTL_STORAGE_CHECK_VERIFY2, NULL, 0, NULL, 0, &cbBytesReturned,
                             (LPOVERLAPPED) NULL))
         {
-            //printf("error - not able to get device properties, is something accessing the device?");
-			//setbuf(stdout, NULL);
+            printf("error - not able to get device properties, is something accessing the device?");
+            //setbuf(stdout, NULL);
         }
             retVal = false;
     }
@@ -453,8 +465,8 @@ bool checkDriveType(char *name, ULONG *pid)
         hDevice = CreateFile(nameNoSlash, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
         if (hDevice == INVALID_HANDLE_VALUE)
         {
-            //printf("error - not able to get handle on device");
-			//setbuf(stdout, NULL);
+            printf("error - not able to get handle on device");
+            //setbuf(stdout, NULL);
         }
         else
         {
